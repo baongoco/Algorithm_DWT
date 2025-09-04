@@ -1,0 +1,9 @@
+Original Image: /Users/vobaongoc/Documents/test.jpg
+Stego Image: stego_images/stego_test_20250904_120837_14eb36.png
+Secret Text: Hello hii
+Text Length: 9
+Embedding Time: 0.0361s
+PSNR: 16.681915856536023
+SNR: 14.36 dB
+SSIM: 0.9001
+Created: 2025-09-04 12:08:37

@@ -1,0 +1,9 @@
+Original Image: /Users/vobaongoc/Documents/meo_trangden.jpeg
+Stego Image: stego_images/stego_meo_trangden_20250904_000736_ced740.png
+Secret Text: Hello helo helo
+Text Length: 15
+Embedding Time: 0.0048s
+PSNR: 81.16431958604718
+SNR: 71.34 dB
+SSIM: 1.0000
+Created: 2025-09-04 00:07:36

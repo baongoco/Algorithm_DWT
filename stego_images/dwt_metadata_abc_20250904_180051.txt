@@ -1,0 +1,30 @@
+TRUE DWT STEGANOGRAPHY METADATA
+========================================
+Algorithm: True DWT Steganography
+Wavelet: haar
+Decomposition Level: 2
+Embedding Location: Mid-frequency coefficients (cH2)
+Embedding Channel: Blue
+Embedding Method: Quantization-based
+Embedding Strength: 0.1
+
+FILES:
+Original Image: /Users/vobaongoc/Documents/abc.jpg
+Stego Image: stego_images/dwt_stego_abc_20250904_180051_c1d9f5.png
+
+MESSAGE INFO:
+Secret Text: H
+Text Length: 1 bytes
+Bits Embedded: 72
+Capacity: 25000 coefficients
+Capacity Usage: 0.29%
+
+QUALITY METRICS:
+Embedding Time: 0.0153s
+PSNR: 78.70 dB
+SSIM: 1.0000
+MSE: 0.001
+SNR: 77.90 dB
+
+TIMESTAMP:
+Created: 2025-09-04 18:00:51.359538
