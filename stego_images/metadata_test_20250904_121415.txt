@@ -1,9 +1,0 @@
-Original Image: /Users/vobaongoc/Documents/test.jpg
-Stego Image: stego_images/stego_test_20250904_121415_274be1.png
-Secret Text: Hello This is msg
-Text Length: 17
-Embedding Time: 0.0416s
-PSNR: 16.68191545966036
-SNR: 14.36 dB
-SSIM: 0.9001
-Created: 2025-09-04 12:14:15

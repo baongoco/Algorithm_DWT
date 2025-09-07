@@ -1,9 +1,0 @@
-Original Image: /Users/vobaongoc/Documents/anh-hoat-hinh-cute-1.jpg
-Stego Image: stego_images/stego_anh-hoat-hinh-cute-1_20250903_181203_274be1.png
-Secret Text: Hello This is msg
-Text Length: 17
-Embedding Time: 0.0077s
-PSNR: 92.69267708751929
-SNR: 90.82 dB
-SSIM: 1.0000
-Created: 2025-09-03 18:12:03

@@ -1,0 +1,30 @@
+TRUE DWT STEGANOGRAPHY METADATA
+========================================
+Algorithm: True DWT Steganography
+Wavelet: haar
+Decomposition Level: 2
+Embedding Location: Mid-frequency coefficients (cH2)
+Embedding Channel: Blue
+Embedding Method: Quantization-based
+Embedding Strength: 4.0
+
+FILES:
+Original Image: /Users/vobaongoc/Downloads/—Pngtree—animal png running cheetah_16164082.png
+Stego Image: stego_images/dwt_stego_—Pngtree—animal png running cheetah_16164082_20250907_133210_b37387.png
+
+MESSAGE INFO:
+Secret Text: helloo
+Text Length: 6 bytes
+Bits Embedded: 72
+Capacity: 1188096 coefficients
+Capacity Usage: 0.01%
+
+QUALITY METRICS:
+Embedding Time: 0.9902s
+PSNR: 85.22 dB
+SSIM: 1.0000
+MSE: 0.000
+SNR: 85.22 dB
+
+TIMESTAMP:
+Created: 2025-09-07 13:32:10.943628

@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.stego_images/
+_tmp_*.png
+_tmp_*.jpg
+*.ipynb_checkpoints
+*.log

@@ -1,9 +1,0 @@
-Original Image: /Users/vobaongoc/Documents/meo_trangden.jpeg
-Stego Image: stego_images/stego_meo_trangden_20250903_235925_31420f.png
-Secret Text: meowww
-Text Length: 6
-Embedding Time: 0.0108s
-PSNR: 82.925232176604
-SNR: 73.10 dB
-SSIM: 1.0000
-Created: 2025-09-03 23:59:25

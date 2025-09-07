@@ -1,1093 +1,4 @@
-# import sys
-# import os
-# import datetime
-# import hashlib
-# import shutil
-# from PyQt5.QtWidgets import *
-# from PyQt5.QtCore import *
-# from PyQt5.QtGui import *
-# import cv2
-# from dwt_algorithm import DWTSteganography
-
-# class DWTSteganographyGUI(QMainWindow):
-#     def __init__(self):
-#         super().__init__()
-#         self.dwt = DWTSteganography()
-#         self.input_image_path = None
-#         self.stego_image_path = None
-#         self.stego_image_array = None
-#         self.is_maximized = False
-#         self.initUI()
-        
-#     def initUI(self):
-#         self.setWindowTitle("DWT Based Image Steganography")
-#         self.setMinimumSize(1200, 900)
-        
-#         # Remove default window frame to create custom title bar
-#         self.setWindowFlags(Qt.FramelessWindowHint)
-        
-#         # Modern color scheme
-#         self.setStyleSheet("""
-#             QMainWindow { 
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #1e3a5f, stop:1 #2c5282);
-#                 border: 2px solid #1a202c;
-#             }
-#         """)
-        
-#         central_widget = QWidget()
-#         self.setCentralWidget(central_widget)
-        
-#         main_layout = QVBoxLayout()
-#         main_layout.setContentsMargins(0, 0, 0, 0)
-#         main_layout.setSpacing(0)
-#         central_widget.setLayout(main_layout)
-        
-#         self.create_custom_title_bar(main_layout)
-#         self.create_content_area(main_layout)
-        
-#     def create_custom_title_bar(self, parent_layout):
-#         """Create custom title bar with window controls"""
-#         title_bar = QWidget()
-#         title_bar.setFixedHeight(60)
-#         title_bar.setStyleSheet("""
-#             QWidget { 
-#                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-#                     stop:0 #1a365d, stop:1 #2c5282);
-#                 border-bottom: 2px solid #4a90e2;
-#             }
-#             QLabel { color: white; font-size: 20px; font-weight: bold; }
-#         """)
-        
-#         title_layout = QHBoxLayout()
-#         title_layout.setContentsMargins(10, 10, 20, 10)
-#         title_bar.setLayout(title_layout)
-        
-#         # Window control buttons on the LEFT
-#         self.create_window_controls(title_layout)
-        
-#         # Add stretch to push title to center
-#         title_layout.addStretch()
-        
-#         # Title in CENTER
-#         title_label = QLabel("DWT Based Image Steganography")
-#         title_label.setAlignment(Qt.AlignCenter)
-#         title_layout.addWidget(title_label)
-        
-#         # Add stretch to keep title centered
-#         title_layout.addStretch()
-        
-#         # Make title bar draggable
-#         title_bar.mousePressEvent = self.title_bar_mouse_press
-#         title_bar.mouseMoveEvent = self.title_bar_mouse_move
-        
-#         parent_layout.addWidget(title_bar)
-        
-#     def create_window_controls(self, layout):
-#         """Create minimize, maximize, close buttons"""
-#         button_style = """
-#             QPushButton {
-#                 background-color: transparent;
-#                 border: none;
-#                 color: white;
-#                 font-size: 16px;
-#                 font-weight: bold;
-#                 padding: 8px 12px;
-#                 margin: 2px;
-#             }
-#             QPushButton:hover {
-#                 background-color: rgba(255,255,255,0.1);
-#                 border-radius: 4px;
-#             }
-#         """
-        
-#         # Minimize button
-#         minimize_btn = QPushButton("−")
-#         minimize_btn.setFixedSize(40, 30)
-#         minimize_btn.setStyleSheet(button_style)
-#         minimize_btn.clicked.connect(self.showMinimized)
-#         layout.addWidget(minimize_btn)
-        
-#         # Maximize/Restore button
-#         self.maximize_btn = QPushButton("□")
-#         self.maximize_btn.setFixedSize(40, 30)
-#         self.maximize_btn.setStyleSheet(button_style)
-#         self.maximize_btn.clicked.connect(self.toggle_maximize)
-#         layout.addWidget(self.maximize_btn)
-        
-#         # Close button
-#         close_btn = QPushButton("×")
-#         close_btn.setFixedSize(40, 30)
-#         close_btn.setStyleSheet(button_style + """
-#             QPushButton:hover {
-#                 background-color: #e53e3e;
-#                 border-radius: 4px;
-#             }
-#         """)
-#         close_btn.clicked.connect(self.close)
-#         layout.addWidget(close_btn)
-        
-#     def toggle_maximize(self):
-#         """Toggle between maximized and normal window state"""
-#         if self.is_maximized:
-#             self.showNormal()
-#             self.maximize_btn.setText("□")
-#             self.is_maximized = False
-#         else:
-#             self.showMaximized()
-#             self.maximize_btn.setText("❐")
-#             self.is_maximized = True
-            
-#     def title_bar_mouse_press(self, event):
-#         """Handle mouse press on title bar for dragging"""
-#         if event.button() == Qt.LeftButton:
-#             self.drag_pos = event.globalPos()
-#             event.accept()
-            
-#     def title_bar_mouse_move(self, event):
-#         """Handle mouse move for window dragging"""
-#         if event.buttons() == Qt.LeftButton and hasattr(self, 'drag_pos'):
-#             self.move(self.pos() + event.globalPos() - self.drag_pos)
-#             self.drag_pos = event.globalPos()
-#             event.accept()
-        
-#     def create_content_area(self, parent_layout):
-#         """Create main content area with modern styling"""
-#         content_widget = QWidget()
-#         content_widget.setStyleSheet("""
-#             QWidget {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #2d3748, stop:1 #1a202c);
-#             }
-#         """)
-#         content_layout = QVBoxLayout()
-#         content_layout.setContentsMargins(20, 20, 20, 20)
-#         content_layout.setSpacing(20)
-#         content_widget.setLayout(content_layout)
-        
-#         self.create_embedding_section(content_layout)
-#         self.create_extraction_section(content_layout)
-        
-#         parent_layout.addWidget(content_widget)
-        
-#     def create_embedding_section(self, parent_layout):
-#         """Create embedding section with modern design"""
-#         embed_group = QGroupBox("EMBEDDING SIDE")
-#         embed_group.setStyleSheet("""
-#             QGroupBox {
-#                 font-size: 16px; 
-#                 font-weight: bold; 
-#                 color: #e2e8f0;
-#                 border: 2px solid #4a90e2;
-#                 border-radius: 12px;
-#                 margin-top: 15px; 
-#                 padding-top: 15px;
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #2b6cb0, stop:1 #2c5282);
-#             }
-#             QGroupBox::title {
-#                 subcontrol-origin: margin; 
-#                 left: 20px;
-#                 padding: 0 15px 0 15px; 
-#                 color: #ffffff;
-#                 background-color: transparent;
-#             }
-#         """)
-        
-#         layout = QVBoxLayout()
-#         layout.setContentsMargins(15, 25, 15, 15)
-#         layout.setSpacing(15)
-#         embed_group.setLayout(layout)
-        
-#         content_row = QWidget()
-#         content_layout = QHBoxLayout()
-#         content_layout.setSpacing(20)
-#         content_row.setLayout(content_layout)
-        
-#         input_widget = self.create_image_widget("No Image Selected", "Input Image")
-#         self.input_image_label = input_widget[0]
-#         content_layout.addWidget(input_widget[1])
-        
-#         text_widget = self.create_text_widget()
-#         content_layout.addWidget(text_widget)
-        
-#         output_widget = self.create_image_widget("Embedded Image Will Appear Here", "Embedded Stego Image")
-#         self.embedded_image_label = output_widget[0]
-#         content_layout.addWidget(output_widget[1])
-        
-#         layout.addWidget(content_row)
-        
-#         button_row = self.create_button_row([
-#             ("Browse Input", self.browse_input_image),
-#             ("Embedding", self.embed_text),
-#             ("Open Stego Folder", self.open_stego_folder)
-#         ])
-#         layout.addWidget(button_row)
-        
-#         param_bar = self.create_param_bar([
-#             ("Embedding Time:", "embed_time_label"),
-#             ("SNR:", "snr_label"), 
-#             ("SSIM:", "ssim_embed_label")
-#         ])
-#         layout.addWidget(param_bar)
-        
-#         parent_layout.addWidget(embed_group)
-        
-#     def create_extraction_section(self, parent_layout):
-#         """Create extraction section with modern design"""
-#         extract_group = QGroupBox("EXTRACTION SIDE")
-#         extract_group.setStyleSheet("""
-#             QGroupBox {
-#                 font-size: 16px; 
-#                 font-weight: bold; 
-#                 color: #e2e8f0;
-#                 border: 2px solid #4a90e2;
-#                 border-radius: 12px;
-#                 margin-top: 15px; 
-#                 padding-top: 15px;
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #2b6cb0, stop:1 #2c5282);
-#             }
-#             QGroupBox::title {
-#                 subcontrol-origin: margin; 
-#                 left: 20px;
-#                 padding: 0 15px 0 15px; 
-#                 color: #ffffff;
-#                 background-color: transparent;
-#             }
-#         """)
-        
-#         layout = QVBoxLayout()
-#         layout.setContentsMargins(15, 25, 15, 15)
-#         layout.setSpacing(15)
-#         extract_group.setLayout(layout)
-        
-#         content_row = QWidget()
-#         content_layout = QHBoxLayout()
-#         content_layout.setSpacing(20)
-#         content_row.setLayout(content_layout)
-        
-#         stego_widget = self.create_image_widget("No Stego Image Selected", "Stego Image")
-#         self.stego_image_label = stego_widget[0]
-#         content_layout.addWidget(stego_widget[1])
-        
-#         extract_widget = self.create_extract_text_widget()
-#         content_layout.addWidget(extract_widget)
-        
-#         button_widget = self.create_button_column([
-#             ("Browse Stego Image", self.browse_stego_image),
-#             ("Detect Steganography", self.detect_steganography),
-#             ("Extraction", self.extract_text),
-#             ("Reset", self.reset_all),
-#             ("Exit", self.close)
-#         ])
-#         content_layout.addWidget(button_widget)
-        
-#         layout.addWidget(content_row)
-        
-#         param_bar = self.create_param_bar([
-#             ("Extraction Time:", "extract_time_label"),
-#             ("PSNR:", "psnr_label"),
-#             ("SSIM:", "ssim_extract_label")
-#         ])
-#         layout.addWidget(param_bar)
-        
-#         parent_layout.addWidget(extract_group)
-        
-#     def create_image_widget(self, placeholder_text, label_text):
-#         """Create image display widget with proper aspect ratio"""
-#         widget = QWidget()
-#         layout = QVBoxLayout()
-#         layout.setAlignment(Qt.AlignCenter)
-#         widget.setLayout(layout)
-        
-#         image_label = QLabel(placeholder_text)
-#         image_label.setFixedSize(300, 300)  # Increased size for better display
-#         image_label.setAlignment(Qt.AlignCenter)
-#         image_label.setScaledContents(False)  # Prevent scaling issues
-#         image_label.setStyleSheet("""
-#             QLabel {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #4a5568, stop:1 #2d3748);
-#                 border: 2px solid #4a90e2;
-#                 border-radius: 8px;
-#                 font-size: 12px; 
-#                 color: #e2e8f0;
-#                 padding: 15px;
-#             }
-#         """)
-#         layout.addWidget(image_label)
-        
-#         text_label = QLabel(label_text)
-#         text_label.setAlignment(Qt.AlignCenter)
-#         text_label.setStyleSheet("""
-#             font-style: italic; 
-#             font-size: 12px; 
-#             background-color: transparent; 
-#             color: #e2e8f0; 
-#             font-weight: bold;
-#             padding: 5px;
-#         """)
-#         layout.addWidget(text_label)
-        
-#         return image_label, widget
-        
-#     def create_text_widget(self):
-#         """Create secret text input widget with modern styling"""
-#         widget = QWidget()
-#         layout = QVBoxLayout()
-#         layout.setAlignment(Qt.AlignCenter)
-#         widget.setLayout(layout)
-        
-#         label = QLabel("Enter Secret Text To Hide")
-#         label.setAlignment(Qt.AlignCenter)
-#         label.setStyleSheet("""
-#             font-size: 12px; 
-#             font-weight: bold; 
-#             background-color: transparent; 
-#             color: #e2e8f0;
-#             padding: 5px;
-#         """)
-#         layout.addWidget(label)
-        
-#         self.secret_text = QTextEdit()
-#         self.secret_text.setFixedSize(320, 220)
-#         self.secret_text.setPlainText("Hello This is msg")
-#         self.secret_text.setStyleSheet("""
-#             QTextEdit {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #4a5568, stop:1 #2d3748);
-#                 border: 2px solid #4a90e2;
-#                 border-radius: 8px;
-#                 font-size: 11px; 
-#                 padding: 10px; 
-#                 color: #e2e8f0;
-#                 selection-background-color: #4a90e2;
-#             }
-#             QScrollBar:vertical {
-#                 background-color: #2d3748;
-#                 width: 12px;
-#                 border-radius: 6px;
-#             }
-#             QScrollBar::handle:vertical {
-#                 background-color: #4a90e2;
-#                 border-radius: 6px;
-#             }
-#         """)
-#         layout.addWidget(self.secret_text)
-        
-#         return widget
-        
-#     def create_extract_text_widget(self):
-#         """Create extracted text display widget with modern styling"""
-#         widget = QWidget()
-#         layout = QVBoxLayout()
-#         layout.setAlignment(Qt.AlignCenter)
-#         widget.setLayout(layout)
-        
-#         label = QLabel("Extracted Secret Text")
-#         label.setAlignment(Qt.AlignCenter)
-#         label.setStyleSheet("""
-#             font-size: 12px; 
-#             font-weight: bold; 
-#             background-color: transparent; 
-#             color: #e2e8f0;
-#             padding: 5px;
-#         """)
-#         layout.addWidget(label)
-        
-#         self.extracted_text = QTextEdit()
-#         self.extracted_text.setFixedSize(320, 220)
-#         self.extracted_text.setReadOnly(True)
-#         self.extracted_text.setStyleSheet("""
-#             QTextEdit {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #4a5568, stop:1 #2d3748);
-#                 border: 2px solid #4a90e2;
-#                 border-radius: 8px;
-#                 font-size: 11px; 
-#                 padding: 10px; 
-#                 color: #e2e8f0;
-#                 selection-background-color: #4a90e2;
-#             }
-#             QScrollBar:vertical {
-#                 background-color: #2d3748;
-#                 width: 12px;
-#                 border-radius: 6px;
-#             }
-#             QScrollBar::handle:vertical {
-#                 background-color: #4a90e2;
-#                 border-radius: 6px;
-#             }
-#         """)
-#         layout.addWidget(self.extracted_text)
-        
-#         return widget
-        
-#     def create_button_row(self, buttons):
-#         """Create horizontal button row with modern styling"""
-#         widget = QWidget()
-#         layout = QHBoxLayout()
-#         layout.setAlignment(Qt.AlignCenter)
-#         layout.setSpacing(15)
-#         widget.setLayout(layout)
-        
-#         for text, callback in buttons:
-#             btn = QPushButton(text)
-#             if text == "Open Stego Folder":
-#                 btn.setFixedSize(140, 45)
-#                 btn.setStyleSheet("""
-#                     QPushButton {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #38a169, stop:1 #2f855a);
-#                         font-size: 11px; 
-#                         font-weight: bold;
-#                         border: none;
-#                         border-radius: 8px; 
-#                         color: white;
-#                         padding: 5px;
-#                     }
-#                     QPushButton:hover { 
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #48bb78, stop:1 #38a169);
-#                     }
-#                     QPushButton:pressed {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #2f855a, stop:1 #276749);
-#                     }
-#                 """)
-#             else:
-#                 btn.setFixedSize(160, 50)
-#                 btn.setStyleSheet("""
-#                     QPushButton {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #4299e1, stop:1 #3182ce);
-#                         font-size: 12px; 
-#                         font-weight: bold;
-#                         border: none;
-#                         border-radius: 8px; 
-#                         color: white;
-#                         padding: 5px;
-#                     }
-#                     QPushButton:hover { 
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #63b3ed, stop:1 #4299e1);
-#                     }
-#                     QPushButton:pressed {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #3182ce, stop:1 #2c5282);
-#                     }
-#                 """)
-#             btn.clicked.connect(callback)
-#             layout.addWidget(btn)
-            
-#         return widget
-        
-#     def create_button_column(self, buttons):
-#         """Create vertical button column with modern styling"""
-#         widget = QWidget()
-#         layout = QVBoxLayout()
-#         layout.setAlignment(Qt.AlignCenter)
-#         layout.setSpacing(10)
-#         widget.setLayout(layout)
-        
-#         for text, callback in buttons:
-#             btn = QPushButton(text)
-#             btn.setFixedSize(200, 45)
-            
-#             if text == "Detect Steganography":
-#                 btn.setStyleSheet("""
-#                     QPushButton {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #ed8936, stop:1 #dd6b20);
-#                         font-size: 12px; 
-#                         font-weight: bold;
-#                         border: none;
-#                         border-radius: 8px; 
-#                         color: white;
-#                         padding: 5px;
-#                     }
-#                     QPushButton:hover { 
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #f6ad55, stop:1 #ed8936);
-#                     }
-#                     QPushButton:pressed {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #dd6b20, stop:1 #c05621);
-#                     }
-#                 """)
-#             elif text == "Exit":
-#                 btn.setStyleSheet("""
-#                     QPushButton {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #e53e3e, stop:1 #c53030);
-#                         font-size: 12px; 
-#                         font-weight: bold;
-#                         border: none;
-#                         border-radius: 8px; 
-#                         color: white;
-#                         padding: 5px;
-#                     }
-#                     QPushButton:hover { 
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #fc8181, stop:1 #e53e3e);
-#                     }
-#                     QPushButton:pressed {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #c53030, stop:1 #9c2626);
-#                     }
-#                 """)
-#             else:
-#                 btn.setStyleSheet("""
-#                     QPushButton {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #4299e1, stop:1 #3182ce);
-#                         font-size: 12px; 
-#                         font-weight: bold;
-#                         border: none;
-#                         border-radius: 8px; 
-#                         color: white;
-#                         padding: 5px;
-#                     }
-#                     QPushButton:hover { 
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #63b3ed, stop:1 #4299e1);
-#                     }
-#                     QPushButton:pressed {
-#                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                             stop:0 #3182ce, stop:1 #2c5282);
-#                     }
-#                 """)
-            
-#             btn.clicked.connect(callback)
-#             layout.addWidget(btn)
-            
-#         return widget
-        
-#     def create_param_bar(self, params):
-#         """Create parameter display bar with modern styling"""
-#         widget = QWidget()
-#         widget.setFixedHeight(50)
-#         widget.setStyleSheet("""
-#             QWidget {
-#                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-#                     stop:0 #1a365d, stop:1 #2c5282);
-#                 border: 1px solid #4a90e2;
-#                 border-radius: 8px;
-#             }
-#         """)
-#         layout = QHBoxLayout()
-#         layout.setContentsMargins(15, 8, 15, 8)
-#         widget.setLayout(layout)
-        
-#         param_label = QLabel("Parameters")
-#         param_label.setStyleSheet("""
-#             font-weight: bold; 
-#             font-style: italic; 
-#             font-size: 13px; 
-#             color: #e2e8f0;
-#             background-color: transparent;
-#         """)
-#         layout.addWidget(param_label)
-        
-#         for label_text, attr_name in params:
-#             label = QLabel(label_text)
-#             label.setStyleSheet("""
-#                 color: #e2e8f0; 
-#                 font-size: 11px; 
-#                 font-weight: bold;
-#                 background-color: transparent;
-#             """)
-#             layout.addWidget(label)
-            
-#             value_label = QLabel("")
-#             value_label.setFixedWidth(100)
-#             value_label.setStyleSheet("""
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #4a5568, stop:1 #2d3748);
-#                 border: 1px solid #4a90e2;
-#                 border-radius: 4px;
-#                 padding: 4px 8px; 
-#                 color: #e2e8f0;
-#                 font-size: 11px;
-#             """)
-#             setattr(self, attr_name, value_label)
-#             layout.addWidget(value_label)
-            
-#         layout.addStretch()
-#         return widget
-        
-#     def display_image(self, image_path, label):
-#         """Display image in label with proper aspect ratio preservation"""
-#         try:
-#             pixmap = QPixmap(image_path)
-#             if pixmap.isNull():
-#                 raise Exception("Invalid image file")
-                
-#             # Calculate proper scaling to fit within label while maintaining aspect ratio
-#             label_size = label.size()
-#             # Reduce padding to show more of the image
-#             target_size = QSize(label_size.width() - 30, label_size.height() - 30)
-            
-#             scaled_pixmap = pixmap.scaled(
-#                 target_size, 
-#                 Qt.KeepAspectRatio, 
-#                 Qt.SmoothTransformation
-#             )
-            
-#             label.setPixmap(scaled_pixmap)
-#             label.setAlignment(Qt.AlignCenter)
-            
-#             # Update label style to remove background when image is loaded
-#             label.setStyleSheet("""
-#                 QLabel {
-#                     background: transparent;
-#                     border: 2px solid #4a90e2;
-#                     border-radius: 8px;
-#                     padding: 15px;
-#                 }
-#             """)
-            
-#         except Exception as e:
-#             label.setText(f"Error loading image:\n{str(e)}")
-#             label.setPixmap(QPixmap())
-#             # Restore original background for error state
-#             label.setStyleSheet("""
-#                 QLabel {
-#                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                         stop:0 #4a5568, stop:1 #2d3748);
-#                     border: 2px solid #4a90e2;
-#                     border-radius: 8px;
-#                     font-size: 12px; 
-#                     color: #e2e8f0;
-#                     padding: 15px;
-#                 }
-#             """)
-#             QMessageBox.critical(self, "Error", f"Failed to display image: {str(e)}")
-    
-#     def browse_input_image(self):
-#         """Browse input image"""
-#         filename, _ = QFileDialog.getOpenFileName(
-#             self, "Select Input Image", "",
-#             "Image Files (*.png *.jpg *.jpeg *.bmp)"
-#         )
-#         if filename:
-#             self.input_image_path = filename
-#             self.display_image(filename, self.input_image_label)
-            
-#     def browse_stego_image(self):
-#         """Enhanced browse with quick access to stego_images folder"""
-#         default_dir = ""
-#         if os.path.exists("stego_images"):
-#             default_dir = "stego_images"
-        
-#         filename, _ = QFileDialog.getOpenFileName(
-#             self, "Select Stego Image", default_dir,
-#             "Image Files (*.png *.jpg *.jpeg *.bmp)"
-#         )
-#         if filename:
-#             self.stego_image_path = filename
-#             self.display_image(filename, self.stego_image_label)
-#             self.check_metadata(filename)
-    
-#     def embed_text(self):
-#         """ENHANCED: Embed text with unique filename generation"""
-#         if not self.input_image_path:
-#             QMessageBox.warning(self, "Warning", "Please select an input image first!")
-#             return
-            
-#         secret_text = self.secret_text.toPlainText()
-#         if not secret_text:
-#             QMessageBox.warning(self, "Warning", "Please enter text to hide!")
-#             return
-            
-#         try:
-#             self.stego_image_array, metrics = self.dwt.embed_text(
-#                 self.input_image_path, secret_text
-#             )
-            
-#             # Generate unique filename
-#             original_name = os.path.splitext(os.path.basename(self.input_image_path))[0]
-#             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-#             text_hash = hashlib.md5(secret_text.encode()).hexdigest()[:6]
-#             output_filename = f"stego_{original_name}_{timestamp}_{text_hash}.png"
-            
-#             # Create output directory
-#             output_dir = "stego_images"
-#             if not os.path.exists(output_dir):
-#                 os.makedirs(output_dir)
-            
-#             output_path = os.path.join(output_dir, output_filename)
-            
-#             if self.dwt.save_stego_image(self.stego_image_array, output_path):
-#                 # Save original copy
-#                 original_copy = os.path.join(output_dir, f"original_{original_name}_{timestamp}.png")
-#                 shutil.copy2(self.input_image_path, original_copy)
-                
-#                 # Create metadata file
-#                 metadata_file = os.path.join(output_dir, f"metadata_{original_name}_{timestamp}.txt")
-#                 with open(metadata_file, 'w') as f:
-#                     f.write(f"Original Image: {self.input_image_path}\n")
-#                     f.write(f"Stego Image: {output_path}\n")
-#                     f.write(f"Secret Text: {secret_text}\n")
-#                     f.write(f"Text Length: {len(secret_text)}\n")
-#                     f.write(f"Embedding Time: {metrics['embedding_time']:.4f}s\n")
-#                     f.write(f"PSNR: {metrics.get('psnr', 'N/A')}\n")
-#                     f.write(f"SNR: {metrics['snr']:.2f} dB\n")
-#                     f.write(f"SSIM: {metrics['ssim']:.4f}\n")
-#                     f.write(f"Created: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-                
-#                 self.display_image(output_path, self.embedded_image_label)
-                
-#                 self.embed_time_label.setText(f"{metrics['embedding_time']:.4f} s")
-#                 self.snr_label.setText(f"{metrics['snr']:.2f} dB")
-#                 self.ssim_embed_label.setText(f"{metrics['ssim']:.4f}")
-                
-#                 QMessageBox.information(self, "Success", 
-#                     f"Text embedded successfully!\n\n"
-#                     f"Files saved in '{output_dir}' folder:\n"
-#                     f"• Stego image: {output_filename}\n"
-#                     f"• Original copy: original_{original_name}_{timestamp}.png\n"
-#                     f"• Metadata: metadata_{original_name}_{timestamp}.txt\n\n"
-#                     f"You can now safely embed into other images without losing this one!")
-#             else:
-#                 QMessageBox.critical(self, "Error", "Failed to save stego image!")
-                
-#         except Exception as e:
-#             QMessageBox.critical(self, "Error", f"Embedding failed: {str(e)}")
-    
-#     def detect_steganography(self):
-#         """Detect if selected image contains steganography"""
-#         if not self.stego_image_path:
-#             QMessageBox.warning(self, "Warning", "Please select an image to analyze first!")
-#             return
-        
-#         try:
-#             is_stego, confidence, details = self.dwt.detect_steganography(self.stego_image_path)
-            
-#             status = "POSITIVE" if is_stego else "NEGATIVE"
-#             message = f"Steganography Detection: {status}\n"
-#             message += f"Confidence: {confidence}%\n\n"
-            
-#             if details:
-#                 message += "Analysis Details:\n"
-#                 for detail in details:
-#                     message += f"• {detail}\n"
-#             else:
-#                 message += "No suspicious patterns detected."
-            
-#             if is_stego:
-#                 message += "\n" + "="*40 + "\n"
-#                 message += "Attempting automatic extraction...\n"
-                
-#                 try:
-#                     extracted_text, _ = self.dwt.extract_text(self.stego_image_path)
-#                     if extracted_text and len(extracted_text.strip()) > 0:
-#                         message += f"SUCCESS: Found hidden text!\n"
-#                         message += f"Extracted: '{extracted_text}'"
-#                         self.extracted_text.setPlainText(extracted_text)
-#                     else:
-#                         message += "No valid text could be extracted."
-#                 except Exception as e:
-#                     message += f"Extraction failed: {e}"
-            
-#             self.show_detection_results(status, message)
-            
-#         except Exception as e:
-#             QMessageBox.critical(self, "Error", f"Detection failed: {str(e)}")
-    
-#     def show_detection_results(self, status, message):
-#         """Show detection results in a custom dialog with modern styling"""
-#         dialog = QDialog(self)
-#         dialog.setWindowTitle("Steganography Detection Results")
-#         dialog.setFixedSize(650, 450)
-#         dialog.setStyleSheet("""
-#             QDialog {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #2d3748, stop:1 #1a202c);
-#                 color: #e2e8f0;
-#             }
-#         """)
-        
-#         layout = QVBoxLayout()
-        
-#         status_label = QLabel(f"Detection Status: {status}")
-#         status_label.setAlignment(Qt.AlignCenter)
-#         if status == "POSITIVE":
-#             status_label.setStyleSheet("""
-#                 font-size: 16px; font-weight: bold; 
-#                 color: #ffffff; 
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #e53e3e, stop:1 #c53030);
-#                 padding: 15px; 
-#                 border-radius: 8px; 
-#                 margin: 10px;
-#                 border: 2px solid #fc8181;
-#             """)
-#         else:
-#             status_label.setStyleSheet("""
-#                 font-size: 16px; font-weight: bold; 
-#                 color: #ffffff; 
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #38a169, stop:1 #2f855a);
-#                 padding: 15px; 
-#                 border-radius: 8px; 
-#                 margin: 10px;
-#                 border: 2px solid #68d391;
-#             """)
-#         layout.addWidget(status_label)
-        
-#         text_area = QTextEdit()
-#         text_area.setPlainText(message)
-#         text_area.setReadOnly(True)
-#         text_area.setStyleSheet("""
-#             QTextEdit {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #4a5568, stop:1 #2d3748);
-#                 border: 2px solid #4a90e2;
-#                 border-radius: 8px;
-#                 font-family: 'Courier New'; 
-#                 font-size: 11px;
-#                 padding: 15px;
-#                 color: #e2e8f0;
-#                 selection-background-color: #4a90e2;
-#             }
-#             QScrollBar:vertical {
-#                 background-color: #2d3748;
-#                 width: 12px;
-#                 border-radius: 6px;
-#             }
-#             QScrollBar::handle:vertical {
-#                 background-color: #4a90e2;
-#                 border-radius: 6px;
-#             }
-#         """)
-#         layout.addWidget(text_area)
-        
-#         close_btn = QPushButton("Close")
-#         close_btn.setFixedSize(120, 35)
-#         close_btn.setStyleSheet("""
-#             QPushButton {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #4299e1, stop:1 #3182ce);
-#                 font-size: 12px; 
-#                 font-weight: bold;
-#                 border: none;
-#                 border-radius: 6px; 
-#                 color: white;
-#                 padding: 5px;
-#             }
-#             QPushButton:hover { 
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #63b3ed, stop:1 #4299e1);
-#             }
-#         """)
-#         close_btn.clicked.connect(dialog.close)
-#         close_layout = QHBoxLayout()
-#         close_layout.addStretch()
-#         close_layout.addWidget(close_btn)
-#         close_layout.addStretch()
-#         layout.addLayout(close_layout)
-        
-#         dialog.setLayout(layout)
-#         dialog.exec_()
-            
-#     def extract_text(self):
-#         """Extract text from stego image"""
-#         if not self.stego_image_path:
-#             QMessageBox.warning(self, "Warning", "Please select a stego image first!")
-#             return
-            
-#         try:
-#             extracted_text, extraction_time = self.dwt.extract_text(self.stego_image_path)
-            
-#             self.extracted_text.setPlainText(extracted_text)
-            
-#             self.extract_time_label.setText(f"{extraction_time:.4f} s")
-            
-#             if self.input_image_path:
-#                 original = cv2.imread(self.input_image_path)
-#                 stego = cv2.imread(self.stego_image_path)
-#                 metrics = self.dwt.calculate_metrics(original, stego)
-                
-#                 self.psnr_label.setText(f"{metrics['psnr']:.2f} dB")
-#                 self.ssim_extract_label.setText(f"{metrics['ssim']:.4f}")
-            
-#             # Modern success dialog
-#             msg = QMessageBox(self)
-#             msg.setWindowTitle("Extraction Success")
-#             msg.setText(f"Text extracted successfully!\n\nExtracted text: '{extracted_text}'")
-#             msg.setStyleSheet("""
-#                 QMessageBox {
-#                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                         stop:0 #2d3748, stop:1 #1a202c);
-#                     color: #e2e8f0;
-#                 }
-#                 QMessageBox QPushButton {
-#                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                         stop:0 #4299e1, stop:1 #3182ce);
-#                     color: white;
-#                     border: none;
-#                     padding: 8px 16px;
-#                     border-radius: 4px;
-#                     font-weight: bold;
-#                 }
-#             """)
-#             msg.exec_()
-            
-#         except Exception as e:
-#             QMessageBox.critical(self, "Error", f"Extraction failed: {str(e)}")
-    
-#     def check_metadata(self, image_path):
-#         """Check if metadata file exists for selected image"""
-#         try:
-#             filename = os.path.basename(image_path)
-#             if filename.startswith("stego_"):
-#                 base_name = filename.replace("stego_", "").replace(".png", "")
-#                 metadata_file = os.path.join(os.path.dirname(image_path), f"metadata_{base_name}.txt")
-                
-#                 if os.path.exists(metadata_file):
-#                     with open(metadata_file, 'r') as f:
-#                         metadata_content = f.read()
-                    
-#                     # Modern metadata dialog
-#                     msg = QMessageBox(self)
-#                     msg.setWindowTitle("Image Metadata Found")
-#                     msg.setText(f"Found metadata for this image:\n\n{metadata_content}")
-#                     msg.setStyleSheet("""
-#                         QMessageBox {
-#                             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                                 stop:0 #2d3748, stop:1 #1a202c);
-#                             color: #e2e8f0;
-#                         }
-#                         QMessageBox QPushButton {
-#                             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                                 stop:0 #4299e1, stop:1 #3182ce);
-#                             color: white;
-#                             border: none;
-#                             padding: 8px 16px;
-#                             border-radius: 4px;
-#                             font-weight: bold;
-#                         }
-#                     """)
-#                     msg.exec_()
-#         except Exception as e:
-#             pass
-    
-#     def open_stego_folder(self):
-#         """Open the stego_images folder"""
-#         if not os.path.exists("stego_images"):
-#             os.makedirs("stego_images")
-            
-#         try:
-#             if sys.platform == "darwin":  # macOS
-#                 os.system(f"open {'stego_images'}")
-#             elif sys.platform == "win32":  # Windows
-#                 os.system(f"explorer {'stego_images'}")
-#             else:  # Linux
-#                 os.system(f"xdg-open {'stego_images'}")
-#         except Exception as e:
-#             msg = QMessageBox(self)
-#             msg.setWindowTitle("Folder Location")
-#             msg.setText(f"Stego images folder location:\n{os.path.abspath('stego_images')}")
-#             msg.setStyleSheet("""
-#                 QMessageBox {
-#                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                         stop:0 #2d3748, stop:1 #1a202c);
-#                     color: #e2e8f0;
-#                 }
-#                 QMessageBox QPushButton {
-#                     background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                         stop:0 #4299e1, stop:1 #3182ce);
-#                     color: white;
-#                     border: none;
-#                     padding: 8px 16px;
-#                     border-radius: 4px;
-#                     font-weight: bold;
-#                 }
-#             """)
-#             msg.exec_()
-            
-#     def reset_all(self):
-#         """Reset all fields"""
-#         self.input_image_path = None
-#         self.stego_image_path = None
-#         self.stego_image_array = None
-        
-#         self.input_image_label.clear()
-#         self.input_image_label.setText("No Image Selected")
-#         self.embedded_image_label.clear()
-#         self.embedded_image_label.setText("Embedded Image Will Appear Here")
-#         self.stego_image_label.clear()
-#         self.stego_image_label.setText("No Stego Image Selected")
-        
-#         self.secret_text.setPlainText("Hello This is msg")
-#         self.extracted_text.clear()
-        
-#         for attr in ['embed_time_label', 'snr_label', 'ssim_embed_label',
-#                      'extract_time_label', 'psnr_label', 'ssim_extract_label']:
-#             getattr(self, attr).clear()
-        
-#         # Modern reset confirmation
-#         msg = QMessageBox(self)
-#         msg.setWindowTitle("Reset Complete")
-#         msg.setText("All fields have been reset!")
-#         msg.setStyleSheet("""
-#             QMessageBox {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #2d3748, stop:1 #1a202c);
-#                 color: #e2e8f0;
-#             }
-#             QMessageBox QPushButton {
-#                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                     stop:0 #38a169, stop:1 #2f855a);
-#                 color: white;
-#                 border: none;
-#                 padding: 8px 16px;
-#                 border-radius: 4px;
-#                 font-weight: bold;
-#             }
-#         """)
-#         msg.exec_()
-
-# if __name__ == '__main__':
-#     app = QApplication(sys.argv)
-    
-#     # Set application-wide style
-#     app.setStyleSheet("""
-#         QMessageBox {
-#             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                 stop:0 #2d3748, stop:1 #1a202c);
-#             color: #e2e8f0;
-#             border: 2px solid #4a90e2;
-#             border-radius: 8px;
-#         }
-#         QMessageBox QPushButton {
-#             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                 stop:0 #4299e1, stop:1 #3182ce);
-#             color: white;
-#             border: none;
-#             padding: 8px 16px;
-#             border-radius: 4px;
-#             font-weight: bold;
-#             min-width: 80px;
-#         }
-#         QMessageBox QPushButton:hover {
-#             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                 stop:0 #63b3ed, stop:1 #4299e1);
-#         }
-#         QFileDialog {
-#             background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-#                 stop:0 #2d3748, stop:1 #1a202c);
-#             color: #e2e8f0;
-#         }
-#     """)
-    
-#     window = DWTSteganographyGUI()
-#     window.show()
-#     sys.exit(app.exec_())
-
-# dwt_gui.py - Updated for True DWT Steganography Algorithm
+# dwt_gui.py - COMPLETE FIXED VERSION with working histogram and DWT analysis
 import sys
 import os
 import datetime
@@ -1101,163 +12,235 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+import pywt  # IMPORTANT: Add this import for DWT analysis
 from dwt_algorithm import DWTSteganography
 
 class HistogramWidget(QWidget):
-    """Enhanced histogram widget for DWT analysis"""
+    """Fixed histogram widget for DWT analysis"""
     def __init__(self):
         super().__init__()
-        self.figure = Figure(figsize=(12, 8))
+        # Create matplotlib figure with proper dark theme
+        self.figure = Figure(figsize=(12, 8), facecolor='#2d3748')
         self.canvas = FigureCanvas(self.figure)
         
+        # Set up layout
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
         
-        # Dark theme for matplotlib
-        self.figure.patch.set_facecolor('#2d3748')
+        # Configure matplotlib for dark theme
+        plt.style.use('dark_background')
         
     def plot_dwt_analysis(self, image_path, title="DWT Coefficient Analysis"):
-        """Plot DWT coefficient analysis"""
+        """Plot DWT coefficient analysis with proper error handling"""
         try:
             self.figure.clear()
             
+            # Read and validate image
             image = cv2.imread(image_path)
             if image is None:
+                self._show_error("Cannot read image file")
                 return False
             
-            # Create 2x3 subplot layout
-            axes = self.figure.subplots(2, 3, figsize=(12, 8))
-            self.figure.suptitle(title, fontsize=14, color='white', y=0.95)
+            # Create subplot layout (2 rows, 3 columns)
+            gs = self.figure.add_gridspec(2, 3, hspace=0.3, wspace=0.3)
+            
+            # Set title
+            self.figure.suptitle(title, fontsize=12, color='white', y=0.95)
             
             colors = ['#3b82f6', '#10b981', '#ef4444']
-            channel_names = ['Blue', 'Green', 'Red']
-            
-            import pywt
+            channel_names = ['Blue (Embed)', 'Green', 'Red']
             
             for i in range(3):
-                channel = image[:, :, i].astype(np.float64)
-                
-                # Apply 2-level DWT (same as algorithm)
-                coeffs2 = pywt.wavedec2(channel, 'haar', level=2)
-                cA2 = coeffs2[0]  # Approximation
-                cH2, cV2, cD2 = coeffs2[1]  # Level 2 details
-                
-                # Plot coefficient histograms
-                # Top row: Mid-frequency coefficients (embedding location)
-                cH2_flat = cH2.flatten()
-                axes[0, i].hist(cH2_flat, bins=50, alpha=0.7, color=colors[i], density=True)
-                axes[0, i].set_title(f'{channel_names[i]} - Mid-Freq Coeffs (cH2)', 
-                                   color='white', fontsize=10)
-                axes[0, i].tick_params(colors='white', labelsize=8)
-                axes[0, i].set_facecolor('#1a202c')
-                axes[0, i].grid(True, alpha=0.3, color='white')
-                
-                # Bottom row: Approximation coefficients  
-                cA2_flat = cA2.flatten()
-                axes[1, i].hist(cA2_flat, bins=50, alpha=0.7, color=colors[i], density=True)
-                axes[1, i].set_title(f'{channel_names[i]} - Low-Freq Coeffs (cA2)', 
-                                   color='white', fontsize=10)
-                axes[1, i].tick_params(colors='white', labelsize=8)
-                axes[1, i].set_facecolor('#1a202c')
-                axes[1, i].grid(True, alpha=0.3, color='white')
-                
-                # Add statistics
-                mean_cH2 = np.mean(cH2_flat)
-                std_cH2 = np.std(cH2_flat)
-                axes[0, i].axvline(mean_cH2, color='red', linestyle='--', alpha=0.8)
-                axes[0, i].text(0.02, 0.95, f'μ={mean_cH2:.2f}\nσ={std_cH2:.2f}', 
-                              transform=axes[0, i].transAxes, verticalalignment='top',
-                              color='white', fontsize=8,
-                              bbox=dict(boxstyle='round', facecolor='black', alpha=0.7))
+                try:
+                    channel = image[:, :, i].astype(np.float64)
+                    
+                    # Apply DWT (ensure proper padding)
+                    h, w = channel.shape
+                    # Pad to make dimensions divisible by 4
+                    pad_h = (4 - (h % 4)) % 4
+                    pad_w = (4 - (w % 4)) % 4
+                    if pad_h > 0 or pad_w > 0:
+                        channel = np.pad(channel, ((0, pad_h), (0, pad_w)), mode='reflect')
+                    
+                    # 2-level DWT decomposition
+                    coeffs = pywt.wavedec2(channel, 'haar', level=2, mode='periodization')
+                    cA2 = coeffs[0]  # Approximation coefficients
+                    cH2, cV2, cD2 = coeffs[1]  # Level 2 detail coefficients
+                    
+                    # Top row: Mid-frequency coefficients (embedding location)
+                    ax1 = self.figure.add_subplot(gs[0, i])
+                    cH2_flat = cH2.flatten()
+                    ax1.hist(cH2_flat, bins=50, alpha=0.7, color=colors[i], density=True, edgecolor='black', linewidth=0.5)
+                    ax1.set_title(f'{channel_names[i]} - Mid-Freq (cH2)', color='white', fontsize=10)
+                    ax1.tick_params(colors='white', labelsize=8)
+                    ax1.set_facecolor('#1a202c')
+                    ax1.grid(True, alpha=0.3, color='white')
+                    
+                    # Add statistics
+                    mean_val = np.mean(cH2_flat)
+                    std_val = np.std(cH2_flat)
+                    ax1.axvline(mean_val, color='red', linestyle='--', alpha=0.8)
+                    ax1.text(0.02, 0.95, f'μ={mean_val:.1f}\nσ={std_val:.1f}', 
+                            transform=ax1.transAxes, verticalalignment='top',
+                            color='white', fontsize=8,
+                            bbox=dict(boxstyle='round', facecolor='black', alpha=0.7))
+                    
+                    # Bottom row: Approximation coefficients
+                    ax2 = self.figure.add_subplot(gs[1, i])
+                    cA2_flat = cA2.flatten()
+                    ax2.hist(cA2_flat, bins=50, alpha=0.7, color=colors[i], density=True, edgecolor='black', linewidth=0.5)
+                    ax2.set_title(f'{channel_names[i]} - Low-Freq (cA2)', color='white', fontsize=10)
+                    ax2.tick_params(colors='white', labelsize=8)
+                    ax2.set_facecolor('#1a202c')
+                    ax2.grid(True, alpha=0.3, color='white')
+                    
+                    # Add statistics for approximation
+                    mean_val = np.mean(cA2_flat)
+                    std_val = np.std(cA2_flat)
+                    ax2.axvline(mean_val, color='red', linestyle='--', alpha=0.8)
+                    ax2.text(0.02, 0.95, f'μ={mean_val:.1f}\nσ={std_val:.1f}', 
+                            transform=ax2.transAxes, verticalalignment='top',
+                            color='white', fontsize=8,
+                            bbox=dict(boxstyle='round', facecolor='black', alpha=0.7))
+                            
+                except Exception as e:
+                    print(f"Error processing channel {i}: {e}")
+                    continue
             
-            self.figure.tight_layout()
             self.canvas.draw()
             return True
             
         except Exception as e:
             print(f"DWT analysis plotting error: {e}")
+            self._show_error(f"DWT analysis failed: {str(e)}")
             return False
     
     def plot_histogram_comparison(self, original_path, stego_path):
-        """Enhanced comparison with DWT focus"""
+        """Enhanced comparison with DWT focus and proper error handling"""
         try:
             self.figure.clear()
             
+            # Read images with validation
             original = cv2.imread(original_path)
             stego = cv2.imread(stego_path)
             
-            if original is None or stego is None:
+            if original is None:
+                self._show_error("Cannot read original image")
+                return False
+            if stego is None:
+                self._show_error("Cannot read stego image")
                 return False
             
-            # 3x3 layout: Histograms + DWT analysis
-            axes = self.figure.subplots(3, 3, figsize=(12, 10))
+            # Ensure same dimensions
+            h_orig, w_orig = original.shape[:2]
+            h_stego, w_stego = stego.shape[:2]
+            
+            if h_orig != h_stego or w_orig != w_stego:
+                # Resize to match
+                min_h, min_w = min(h_orig, h_stego), min(w_orig, w_stego)
+                original = original[:min_h, :min_w]
+                stego = stego[:min_h, :min_w]
+            
+            # Create 3x3 layout
+            gs = self.figure.add_gridspec(3, 3, hspace=0.4, wspace=0.3)
             self.figure.suptitle('DWT Steganography: Original vs Stego Analysis', 
-                               fontsize=14, color='white', y=0.95)
+                               fontsize=12, color='white', y=0.95)
             
             colors = ['#3b82f6', '#10b981', '#ef4444']
             channel_names = ['Blue (Embed)', 'Green', 'Red']
             
-            import pywt
-            
             for i in range(3):
-                # Row 1: Original histograms
-                hist_orig = cv2.calcHist([original], [i], None, [256], [0, 256])
-                axes[0, i].plot(hist_orig, color=colors[i], alpha=0.8, linewidth=1.5)
-                axes[0, i].set_title(f'Original - {channel_names[i]}', 
-                                   color='white', fontsize=10)
-                axes[0, i].set_facecolor('#1a202c')
-                axes[0, i].tick_params(colors='white', labelsize=8)
-                axes[0, i].grid(True, alpha=0.3, color='white')
-                
-                # Row 2: Stego histograms
-                hist_stego = cv2.calcHist([stego], [i], None, [256], [0, 256])
-                axes[1, i].plot(hist_stego, color=colors[i], alpha=0.8, linewidth=1.5)
-                axes[1, i].set_title(f'Stego - {channel_names[i]}', 
-                                   color='white', fontsize=10)
-                axes[1, i].set_facecolor('#1a202c')
-                axes[1, i].tick_params(colors='white', labelsize=8)
-                axes[1, i].grid(True, alpha=0.3, color='white')
-                
-                # Row 3: DWT coefficient differences
-                orig_channel = original[:, :, i].astype(np.float64)
-                stego_channel = stego[:, :, i].astype(np.float64)
-                
-                # DWT analysis
-                orig_coeffs2 = pywt.wavedec2(orig_channel, 'haar', level=2)
-                stego_coeffs2 = pywt.wavedec2(stego_channel, 'haar', level=2)
-                
-                # Compare mid-frequency coefficients (embedding location)
-                orig_cH2 = orig_coeffs2[1][0].flatten()  # cH2
-                stego_cH2 = stego_coeffs2[1][0].flatten()  # cH2
-                
-                coeff_diff = np.abs(orig_cH2 - stego_cH2)
-                axes[2, i].hist(coeff_diff, bins=30, alpha=0.7, color='orange', density=True)
-                axes[2, i].set_title(f'DWT Coeff Diff - {channel_names[i]}', 
-                                   color='white', fontsize=10)
-                axes[2, i].set_facecolor('#1a202c')
-                axes[2, i].tick_params(colors='white', labelsize=8)
-                axes[2, i].grid(True, alpha=0.3, color='white')
-                
-                # Add statistics
-                max_diff = np.max(coeff_diff)
-                mean_diff = np.mean(coeff_diff)
-                axes[2, i].text(0.02, 0.95, f'Max: {max_diff:.3f}\nMean: {mean_diff:.4f}', 
-                              transform=axes[2, i].transAxes, verticalalignment='top',
-                              color='white', fontsize=8,
-                              bbox=dict(boxstyle='round', facecolor='black', alpha=0.7))
-                
-                # Highlight embedding channel
-                if i == 0:  # Blue channel
-                    axes[2, i].set_ylabel('Density (EMBEDDING CHANNEL)', color='yellow', fontweight='bold')
+                try:
+                    # Row 1: Original histograms
+                    ax1 = self.figure.add_subplot(gs[0, i])
+                    hist_orig = cv2.calcHist([original], [i], None, [256], [0, 256])
+                    ax1.plot(hist_orig, color=colors[i], alpha=0.8, linewidth=1.5)
+                    ax1.set_title(f'Original - {channel_names[i]}', color='white', fontsize=9)
+                    ax1.set_facecolor('#1a202c')
+                    ax1.tick_params(colors='white', labelsize=7)
+                    ax1.grid(True, alpha=0.3, color='white')
+                    
+                    # Row 2: Stego histograms
+                    ax2 = self.figure.add_subplot(gs[1, i])
+                    hist_stego = cv2.calcHist([stego], [i], None, [256], [0, 256])
+                    ax2.plot(hist_stego, color=colors[i], alpha=0.8, linewidth=1.5)
+                    ax2.set_title(f'Stego - {channel_names[i]}', color='white', fontsize=9)
+                    ax2.set_facecolor('#1a202c')
+                    ax2.tick_params(colors='white', labelsize=7)
+                    ax2.grid(True, alpha=0.3, color='white')
+                    
+                    # Row 3: DWT coefficient differences
+                    ax3 = self.figure.add_subplot(gs[2, i])
+                    
+                    # Process channels for DWT
+                    orig_channel = original[:, :, i].astype(np.float64)
+                    stego_channel = stego[:, :, i].astype(np.float64)
+                    
+                    # Ensure proper dimensions for DWT
+                    h, w = orig_channel.shape
+                    pad_h = (4 - (h % 4)) % 4
+                    pad_w = (4 - (w % 4)) % 4
+                    
+                    if pad_h > 0 or pad_w > 0:
+                        orig_channel = np.pad(orig_channel, ((0, pad_h), (0, pad_w)), mode='reflect')
+                        stego_channel = np.pad(stego_channel, ((0, pad_h), (0, pad_w)), mode='reflect')
+                    
+                    # DWT analysis
+                    orig_coeffs = pywt.wavedec2(orig_channel, 'haar', level=2, mode='periodization')
+                    stego_coeffs = pywt.wavedec2(stego_channel, 'haar', level=2, mode='periodization')
+                    
+                    # Compare mid-frequency coefficients (embedding location)
+                    orig_cH2 = orig_coeffs[1][0].flatten()  # cH2 coefficients
+                    stego_cH2 = stego_coeffs[1][0].flatten()  # cH2 coefficients
+                    
+                    # Calculate differences
+                    coeff_diff = np.abs(orig_cH2 - stego_cH2)
+                    
+                    # Plot difference histogram
+                    ax3.hist(coeff_diff, bins=30, alpha=0.7, color='orange', density=True, edgecolor='black', linewidth=0.5)
+                    ax3.set_title(f'DWT Diff - {channel_names[i]}', color='white', fontsize=9)
+                    ax3.set_facecolor('#1a202c')
+                    ax3.tick_params(colors='white', labelsize=7)
+                    ax3.grid(True, alpha=0.3, color='white')
+                    
+                    # Add statistics
+                    max_diff = np.max(coeff_diff)
+                    mean_diff = np.mean(coeff_diff)
+                    modified_coeffs = np.sum(coeff_diff > 0.1)
+                    
+                    ax3.text(0.02, 0.95, f'Max: {max_diff:.2f}\nMean: {mean_diff:.3f}\nMod: {modified_coeffs}', 
+                            transform=ax3.transAxes, verticalalignment='top',
+                            color='white', fontsize=7,
+                            bbox=dict(boxstyle='round', facecolor='black', alpha=0.7))
+                    
+                    # Highlight embedding channel
+                    if i == 0:  # Blue channel
+                        ax3.set_xlabel('EMBEDDING CHANNEL', color='yellow', fontweight='bold', fontsize=8)
+                        
+                except Exception as e:
+                    print(f"Error processing comparison for channel {i}: {e}")
+                    continue
             
-            self.figure.tight_layout()
             self.canvas.draw()
             return True
             
         except Exception as e:
             print(f"DWT comparison plotting error: {e}")
+            self._show_error(f"Comparison analysis failed: {str(e)}")
             return False
+    
+    def _show_error(self, error_msg):
+        """Display error message on canvas"""
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+        ax.text(0.5, 0.5, f"Error: {error_msg}", 
+                transform=ax.transAxes, ha='center', va='center',
+                color='red', fontsize=14, fontweight='bold')
+        ax.set_facecolor('#1a202c')
+        ax.set_xticks([])
+        ax.set_yticks([])
+        self.canvas.draw()
 
 class DWTSteganographyGUI(QMainWindow):
     def __init__(self):
@@ -1273,9 +256,10 @@ class DWTSteganographyGUI(QMainWindow):
         self.setWindowTitle("True DWT Steganography with Advanced Analysis")
         self.setMinimumSize(1400, 1000)
         
+        # Remove window frame for custom title bar
         self.setWindowFlags(Qt.FramelessWindowHint)
         
-        # Enhanced dark theme
+        # Dark theme
         self.setStyleSheet("""
             QMainWindow { 
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -1569,10 +553,10 @@ class DWTSteganographyGUI(QMainWindow):
                         analysis_text += f"• {detail}\n"
                 
                 if is_suspicious:
-                    analysis_text += f"\n⚠️ ALERT: DWT patterns suggest steganography!\n"
+                    analysis_text += f"\nALERT: DWT patterns suggest steganography!\n"
                     analysis_text += f"Recommended: Check blue channel mid-frequency coefficients"
                 else:
-                    analysis_text += f"\n✓ Normal DWT coefficient distribution detected"
+                    analysis_text += f"\nNormal DWT coefficient distribution detected"
                 
                 self.dwt_analysis.setText(analysis_text)
                 
@@ -1593,10 +577,17 @@ class DWTSteganographyGUI(QMainWindow):
         if success:
             # Perform detailed DWT comparison
             try:
-                import pywt
-                
                 original = cv2.imread(self.input_image_path).astype(np.float64)
                 stego = cv2.imread(self.stego_image_path).astype(np.float64)
+                
+                # Ensure same dimensions
+                h_orig, w_orig = original.shape[:2]
+                h_stego, w_stego = stego.shape[:2]
+                
+                if h_orig != h_stego or w_orig != w_stego:
+                    min_h, min_w = min(h_orig, h_stego), min(w_orig, w_stego)
+                    original = original[:min_h, :min_w]
+                    stego = stego[:min_h, :min_w]
                 
                 analysis_text = f"DWT Comparative Analysis:\n"
                 analysis_text += f"Original: {os.path.basename(self.input_image_path)}\n"
@@ -1607,9 +598,18 @@ class DWTSteganographyGUI(QMainWindow):
                     orig_channel = original[:, :, i]
                     stego_channel = stego[:, :, i]
                     
+                    # Pad for DWT
+                    h, w = orig_channel.shape
+                    pad_h = (4 - (h % 4)) % 4
+                    pad_w = (4 - (w % 4)) % 4
+                    
+                    if pad_h > 0 or pad_w > 0:
+                        orig_channel = np.pad(orig_channel, ((0, pad_h), (0, pad_w)), mode='reflect')
+                        stego_channel = np.pad(stego_channel, ((0, pad_h), (0, pad_w)), mode='reflect')
+                    
                     # 2-level DWT
-                    orig_coeffs2 = pywt.wavedec2(orig_channel, 'haar', level=2)
-                    stego_coeffs2 = pywt.wavedec2(stego_channel, 'haar', level=2)
+                    orig_coeffs2 = pywt.wavedec2(orig_channel, 'haar', level=2, mode='periodization')
+                    stego_coeffs2 = pywt.wavedec2(stego_channel, 'haar', level=2, mode='periodization')
                     
                     # Compare mid-frequency coefficients (embedding location)
                     orig_cH2 = orig_coeffs2[1][0].flatten()
@@ -1628,9 +628,9 @@ class DWTSteganographyGUI(QMainWindow):
                     
                     if i == 0:  # Blue channel (embedding channel)
                         if mean_diff > 0.01:
-                            analysis_text += f"  🚨 SIGNIFICANT CHANGES in embedding channel!\n"
+                            analysis_text += f"  SIGNIFICANT CHANGES in embedding channel!\n"
                         else:
-                            analysis_text += f"  ✓ Minimal changes (good imperceptibility)\n"
+                            analysis_text += f"  Minimal changes (good imperceptibility)\n"
                     
                     analysis_text += "\n"
                 
@@ -1802,7 +802,7 @@ class DWTSteganographyGUI(QMainWindow):
         
         self.secret_text = QTextEdit()
         self.secret_text.setFixedSize(size[0], size[1])
-        self.secret_text.setPlainText("Hello DWT Steganography! 🔐")
+        self.secret_text.setPlainText("Hello DWT Steganography!")
         self.secret_text.setStyleSheet("""
             QTextEdit {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -2020,13 +1020,13 @@ class DWTSteganographyGUI(QMainWindow):
         """Browse input image with DWT analysis"""
         filename, _ = QFileDialog.getOpenFileName(
             self, "Select Input Image", "",
-            "Image Files (*.png *.jpg *.jpeg *.bmp)"
+            "Image Files (*.png *.jpg *.jpeg *.bmp *.tiff)"
         )
         if filename:
             self.input_image_path = filename
             self.display_image(filename, self.input_image_label)
             # Auto-show DWT analysis
-            self.show_original_dwt()
+            QTimer.singleShot(100, self.show_original_dwt)  # Delay to ensure display is ready
             
     def browse_stego_image(self):
         """Browse stego image with auto-analysis"""
@@ -2036,13 +1036,13 @@ class DWTSteganographyGUI(QMainWindow):
         
         filename, _ = QFileDialog.getOpenFileName(
             self, "Select Stego Image", default_dir,
-            "Image Files (*.png *.jpg *.jpeg *.bmp)"
+            "Image Files (*.png *.jpg *.jpeg *.bmp *.tiff)"
         )
         if filename:
             self.stego_image_path = filename
             self.display_image(filename, self.stego_image_label)
             # Auto-show DWT analysis
-            self.show_stego_dwt()
+            QTimer.singleShot(100, self.show_stego_dwt)
             self.check_metadata(filename)
     
     def embed_text(self):
@@ -2051,7 +1051,7 @@ class DWTSteganographyGUI(QMainWindow):
             QMessageBox.warning(self, "Warning", "Please select an input image first!")
             return
             
-        secret_text = self.secret_text.toPlainText()
+        secret_text = self.secret_text.toPlainText().strip()
         if not secret_text:
             QMessageBox.warning(self, "Warning", "Please enter text to hide!")
             return
@@ -2074,7 +1074,7 @@ class DWTSteganographyGUI(QMainWindow):
             output_path = os.path.join(output_dir, output_filename)
             
             if self.dwt.save_stego_image(self.stego_image_array, output_path):
-                # Enhanced metadata with DWT specifics
+                # Save enhanced metadata
                 self.save_dwt_metadata(output_dir, original_name, timestamp, 
                                      secret_text, metrics, output_path)
                 
@@ -2090,8 +1090,8 @@ class DWTSteganographyGUI(QMainWindow):
                 # Auto-set for comparison
                 self.stego_image_path = output_path
                 
-                # Auto-compare DWT
-                self.compare_dwt_analysis()
+                # Auto-compare DWT after a short delay
+                QTimer.singleShot(500, self.compare_dwt_analysis)
                 
                 QMessageBox.information(self, "DWT Embedding Success", 
                     f"Text embedded using True DWT Steganography!\n\n"
@@ -2150,11 +1150,11 @@ class DWTSteganographyGUI(QMainWindow):
                     message += f"• {detail}\n"
             
             if extracted_text:
-                message += f"\n✓ DWT Extraction SUCCESS: '{extracted_text}'"
+                message += f"\nDWT Extraction SUCCESS: '{extracted_text}'"
                 self.extracted_text.setPlainText(extracted_text)
             
             # Auto-show DWT analysis
-            self.show_stego_dwt()
+            QTimer.singleShot(100, self.show_stego_dwt)
             
             self.show_detection_results(status, message)
             
@@ -2233,7 +1233,7 @@ class DWTSteganographyGUI(QMainWindow):
                         metadata_content = f.read()
                     
                     QMessageBox.information(self, "DWT Metadata Found", 
-                        f"Found DWT steganography metadata:\n\n{metadata_content}")
+                        f"Found DWT steganography metadata:\n\n{metadata_content[:500]}...")
         except:
             pass
     
@@ -2325,9 +1325,18 @@ class DWTSteganographyGUI(QMainWindow):
         for label in [self.input_image_label, self.embedded_image_label, self.stego_image_label]:
             label.clear()
             label.setText("No Image")
+            label.setPixmap(QPixmap())
+            label.setStyleSheet("""
+                QLabel {
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                        stop:0 #4a5568, stop:1 #2d3748);
+                    border: 2px solid #4a90e2; border-radius: 8px;
+                    font-size: 11px; color: #e2e8f0; padding: 10px;
+                }
+            """)
         
         # Clear text areas
-        self.secret_text.setPlainText("Hello DWT Steganography! 🔐")
+        self.secret_text.setPlainText("Hello DWT Steganography!")
         self.extracted_text.clear()
         self.dwt_analysis.clear()
         
@@ -2336,6 +1345,12 @@ class DWTSteganographyGUI(QMainWindow):
                      'capacity_label', 'wavelet_label', 'extract_time_label', 
                      'detection_label', 'confidence_label', 'method_label']:
             getattr(self, attr).clear()
+            getattr(self, attr).setStyleSheet("""
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #4a5568, stop:1 #2d3748);
+                border: 1px solid #4a90e2; border-radius: 3px;
+                padding: 2px 4px; color: #e2e8f0; font-size: 8px;
+            """)
         
         # Clear DWT visualization
         self.dwt_widget.figure.clear()
